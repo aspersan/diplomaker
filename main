@@ -1,0 +1,124 @@
+/****************************************************/
+/**
+ * A special function that runs when the spreadsheet is first
+ * opened or reloaded. onOpen() is used to add custom menu
+ * items to the spreadsheet.
+ */
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu("🧙‍♂️ Diplomaker")
+    .addItem("Kalise para todos!", "generaDiplomes")
+    .addToUi();
+}
+/* *************************************************** */
+
+function generaDiplomes() {
+  
+  const TAB_DIPLOMES  = "Diplomes"
+  const COL_CHECK     = 0
+  const COL_CICLE     = 1
+  const COL_ID        = 2
+  const COL_URL       = 4
+  
+  const Ssheets       = SpreadsheetApp.getActive()
+  const sheetDiplomes = Ssheets.getSheetByName(TAB_DIPLOMES)
+  const infoDiplomes  = sheetDiplomes.getDataRange().getValues();
+  const data          = Utilities.formatDate(new Date(), "GMT+1", "yyyy-MM-dd")
+  
+  infoDiplomes.shift()
+
+  for(let [i, fila] of infoDiplomes.entries() ){
+    
+    if( fila[COL_CHECK] ){
+
+      Logger.log("Generando diplomas " + fila[COL_CICLE])
+
+      const celdaURL = sheetDiplomes.getRange(i+2, COL_URL)
+      celdaURL.setValue("🎓 🎓 🎓 ⏳ ...").setHorizontalAlignment("center").setFontSize(17)
+
+      const alumnesGrup = Ssheets.getSheetByName(fila[COL_CICLE]).getDataRange().getValues();
+      if( alumnesGrup.length > 1 ){
+        
+        const dstFolder = DriveApp.getFileById(Ssheets.getId()).getParents().next()
+
+        const copyFile = copiaFileById( fila[COL_ID], dstFolder )
+        const slidesDiploma = SlidesApp.openById( copyFile.getId() );
+        
+        alumnesGrup.shift()
+        inflaDiplomes( slidesDiploma, alumnesGrup )
+        
+        const text=" 📜 " + data + " " + fila[COL_CICLE]
+        addLinkToCell(text, slidesDiploma.getUrl(), celdaURL)
+        celdaURL.setHorizontalAlignment("left").setFontSize(14)
+        
+      }else{
+        celdaURL.setValue(" 💩 Sense alumnes...").setHorizontalAlignment("left").setFontSize(14)
+      }
+    } 
+  }
+}
+
+function copiaFileById( idFile, dstFolder ) {
+  
+  const srcFile   = DriveApp.getFileById(idFile);
+  const date      = Utilities.formatDate(new Date(), "GMT+1", "yyyy-MM-dd")
+  const fileName  = date + " " + srcFile.getName();
+  
+  try{
+    deleteFileIfExist( dstFolder, fileName );
+  }catch( err ){
+    Logger.log(err.message + " Solo el propietario puede borrar el fichero " + fileName);
+  }
+
+  return srcFile.makeCopy( fileName, dstFolder );
+}
+
+function deleteFileIfExist( folder, fileName ){
+  
+  let filesMismoNombre = folder.getFilesByName(fileName)
+
+  while (filesMismoNombre.hasNext()) {
+    const fileToDelete = filesMismoNombre.next()
+    DriveApp.getFileById(fileToDelete.getId()).setTrashed(true)
+  }
+}
+
+function inflaDiplomes( slidesDiploma, alumnesGrup ){
+
+  const COL_NOM       = 0
+  const COL_MH        = 1
+  const SHAPE_NOM_CAN = 10
+  const SHAPE_NOM_MH  = 9
+  const slides        = slidesDiploma.getSlides()
+  const slideCanonic  = slides[0]
+  const slideMH       = slides[slides.length-1]
+  
+  for(let alum of alumnesGrup ){
+    
+    const newDiploma = slideCanonic.duplicate() 
+    
+    // Para encontrar posición shape nombre
+    //for(let shape of newDiploma.getShapes()) Logger.log(shape.getTitle()) 
+    
+    newDiploma.getShapes()[SHAPE_NOM_CAN].getText().setText(alum[COL_NOM]);
+    if(alum[COL_MH] == "MH") { 
+      const newMH = slideMH.duplicate();
+      newMH.getShapes()[SHAPE_NOM_MH].getText().setText(alum[COL_NOM]);
+    }
+  }
+  slideCanonic.remove()
+  slideMH.remove()
+}
+
+function addLinkToCell( text, url, celda ) {
+ 
+  const style = SpreadsheetApp.newTextStyle().setUnderline(false).build()
+
+  const richValue = SpreadsheetApp.newRichTextValue()
+    .setText(text)
+    .setLinkUrl(url)
+    .setTextStyle(style)
+    .build()
+  celda.setRichTextValue(richValue)
+
+}
