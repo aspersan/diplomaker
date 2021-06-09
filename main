@@ -27,7 +27,8 @@ function generaDiplomes() {
   
   infoDiplomes.shift()
 
-  for(let [i, fila] of infoDiplomes.entries() ){
+  const dadesDiplomes = infoDiplomes.entries();
+  for(let [i, fila] of  dadesDiplomes ){
     
     if( fila[COL_CHECK] ){
 
@@ -87,23 +88,19 @@ function inflaDiplomes( slidesDiploma, alumnesGrup ){
 
   const COL_NOM       = 0
   const COL_MH        = 1
-  const SHAPE_NOM_CAN = 10
-  const SHAPE_NOM_MH  = 9
+  const SRC_TEXT      = "Nom Cognom1 Cognom2"
   const slides        = slidesDiploma.getSlides()
   const slideCanonic  = slides[0]
   const slideMH       = slides[slides.length-1]
   
   for(let alum of alumnesGrup ){
     
-    const newDiploma = slideCanonic.duplicate() 
+    const slideNewDiploma = slideCanonic.duplicate() 
+    swapText( slideNewDiploma, SRC_TEXT, alum[COL_NOM] )
     
-    // Para encontrar posición shape nombre
-    //for(let shape of newDiploma.getShapes()) Logger.log(shape.getTitle()) 
-    
-    newDiploma.getShapes()[SHAPE_NOM_CAN].getText().setText(alum[COL_NOM]);
     if(alum[COL_MH] == "MH") { 
-      const newMH = slideMH.duplicate();
-      newMH.getShapes()[SHAPE_NOM_MH].getText().setText(alum[COL_NOM]);
+      const slideNewMH = slideMH.duplicate();
+      swapText( slideNewMH, SRC_TEXT, alum[COL_NOM] )
     }
   }
   slideCanonic.remove()
@@ -121,4 +118,17 @@ function addLinkToCell( text, url, celda ) {
     .build()
   celda.setRichTextValue(richValue)
 
+}
+
+function swapText( slide, srcText, newText ){
+  
+  const shapes = slide.getShapes()
+  for( let shape of shapes ){
+    
+    if( shape.getText().asString().trim() == srcText ){
+
+      shape.getText().setText(newText)
+      break
+    }
+  }
 }
