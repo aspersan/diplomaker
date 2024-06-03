@@ -98,7 +98,7 @@ function inflaDiplomes( slidesDiploma, alumnesGrup ){
     const slideNewDiploma = slideCanonic.duplicate() 
     swapText( slideNewDiploma, SRC_TEXT, alum[COL_NOM] )
     
-    if(alum[COL_MH] == "MH") { 
+    if(alum[COL_MH] == true) { 
       const slideNewMH = slideMH.duplicate();
       swapText( slideNewMH, SRC_TEXT, alum[COL_NOM] )
     }
