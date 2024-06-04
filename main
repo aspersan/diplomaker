@@ -42,7 +42,7 @@ function generaDiplomes() {
         
         const dstFolder = DriveApp.getFileById(Ssheets.getId()).getParents().next()
 
-        const copyFile = copiaFileById( fila[COL_ID], dstFolder )
+        const copyFile = copiaFileById( fila[COL_ID], dstFolder, fila[COL_CICLE] )
         const slidesDiploma = SlidesApp.openById( copyFile.getId() );
         
         alumnesGrup.shift()
@@ -59,11 +59,12 @@ function generaDiplomes() {
   }
 }
 
-function copiaFileById( idFile, dstFolder ) {
+function copiaFileById( idFile, dstFolder, nombreCiclo ) {
   
   const srcFile   = DriveApp.getFileById(idFile);
   const date      = Utilities.formatDate(new Date(), "GMT+1", "yyyy-MM-dd")
-  const fileName  = date + " " + srcFile.getName();
+  //const fileName  = date + " " + srcFile.getName();
+  const fileName  = date + " " + nombreCiclo;
   
   try{
     deleteFileIfExist( dstFolder, fileName );
